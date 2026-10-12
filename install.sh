@@ -45,7 +45,17 @@ else
 fi
 
 echo "Install wdhw tools dependencies"
-apt install -y python3 python3-serial python3-smbus hddtemp
+apt install -y python3 python3-serial python3-smbus
+
+# hddtemp is gone since Debian 13: fall back to drivetemp and a small replacement script
+if [ -n "$(apt-cache madison hddtemp)" ]; then
+	apt install -y hddtemp
+else
+	echo "hddtemp is not available, using the drivetemp kernel module instead"
+	cp -f tools/drivetemp.conf /etc/modules-load.d/drivetemp.conf
+	modprobe drivetemp
+	install -o root -g root -m 755 tools/hddtemp /usr/sbin/hddtemp
+fi
 
 echo "Create wdhwd user"
 id wdhwd
