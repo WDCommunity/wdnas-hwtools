@@ -60,6 +60,23 @@ HDSMART_DISKS = ["/dev/sda", "/dev/sdb"]
 _HDSMART_REGEX_TEMPERATURE = re.compile(r"^([0-9]+)[^0-9]*$")
 
 
+def _findCoreTempHwmon(default):
+    """Find the hwmon index of the coretemp driver.
+    
+    The hwmon numbering is not stable (e.g. drivetemp adds devices), so the
+    index is looked up by driver name; the configured index is the fallback.
+    """
+    for entry in sorted(os.listdir("/sys/class/hwmon")):
+        try:
+            with open(os.path.join("/sys/class/hwmon", entry, "name"), 'rt') as f:
+                if f.readline().strip() == "coretemp":
+                    return int(entry[len("hwmon"):])
+        except (IOError, ValueError):
+            pass
+    _logger.warning("coretemp hwmon not found, using configured index %d", default)
+    return default
+
+
 class TemperatureReader(object):
     """Temperature measurement reader.
     """
@@ -69,7 +86,7 @@ class TemperatureReader(object):
         super().__init__()
         self.__lock = threading.RLock()
         self.__running = False
-        self.hwmon = hwmon
+        self.hwmon = _findCoreTempHwmon(hwmon)
     
     def connect(self):
         """Connect the temperature reader.
