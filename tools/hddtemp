@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# Minimal hddtemp replacement for wdhwd on systems without the hddtemp
+# package (dropped in Debian 13). Reads the drive temperature from the
+# drivetemp kernel module via sysfs.
+#
+# Usage (as called by wdhwd): hddtemp -n -u C /dev/sdX
+#
+# Only shell builtins are used: tools/wdhwd.sudoers runs this with NOEXEC.
+#
+for arg; do dev=$arg; done
+dev=${dev#/dev/}
+for f in /sys/block/$dev/device/hwmon/hwmon*/temp1_input; do
+    if [ -r "$f" ]; then
+        read t < "$f"
+        echo $((t / 1000))
+        exit 0
+    fi
+done
+echo "hddtemp: no temperature for $dev (is drivetemp loaded?)" >&2
+exit 1

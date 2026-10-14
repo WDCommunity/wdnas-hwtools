@@ -34,6 +34,14 @@ Moreover, _hddtemp_ is necessary in order to monitor the hard disk temperature:
 
     sudo apt install hddtemp
 
+Debian 13 (Trixie) and later no longer ship _hddtemp_. Use the `drivetemp` kernel
+module and the replacement script [tools/hddtemp](tools/hddtemp) instead, which
+reads the drive temperature from sysfs:
+
+    sudo cp tools/drivetemp.conf /etc/modules-load.d/drivetemp.conf
+    sudo modprobe drivetemp
+    sudo install -o root -g root -m 755 tools/hddtemp /usr/sbin/hddtemp
+
 ### Setting up the environment
 
 It is highly recommended to run the daemon as a non-priviledged user. Therefore, a
